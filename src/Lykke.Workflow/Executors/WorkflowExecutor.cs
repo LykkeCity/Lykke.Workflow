@@ -24,17 +24,35 @@ namespace Lykke.Workflow.Executors
             Guid activityExecutionId,
             out object activityOutput)
         {
-            return node.ActivitySlot.Execute(
-                activityExecutionId,
-                Factory,
-                Context,
-                null,
-                out activityOutput,
-                activityInput => ExecutionObserver.ActivityStarted(
+            var telemtryOperation = TelemetryHelper.InitTelemetryOperation(
+                "Workflow node execution",
+                node.Name,
+                node.ActivityType,
+                activityExecutionId.ToString());
+
+            try
+            {
+                return node.ActivitySlot.Execute(
                     activityExecutionId,
-                    node.Name,
-                    node.ActivityType,
-                    activityInput));
+                    Factory,
+                    Context,
+                    null,
+                    out activityOutput,
+                    activityInput => ExecutionObserver.ActivityStarted(
+                        activityExecutionId,
+                        node.Name,
+                        node.ActivityType,
+                        activityInput));
+            }
+            catch (Exception e)
+            {
+                TelemetryHelper.SubmitException(telemtryOperation, e);
+                throw;
+            }
+            finally
+            {
+                TelemetryHelper.SubmitOperationResult(telemtryOperation);
+            }
         }
     }
 }

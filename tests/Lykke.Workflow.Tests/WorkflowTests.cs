@@ -442,7 +442,7 @@ namespace Lykke.Workflow.Tests
             wf.Configure(cfg => cfg.Do("node").End());
             wf.DelegateNode<string, string>("node", x => ActivityMethod(x))
                 .WithInput(context => (string)(((dynamic)context).Input))
-                .ProcessOutput((context, output) => ((dynamic)context).Output=output);
+                .ProcessOutput((context, output) => ((dynamic)context).Output = output);
 
             var wfContext = JObject.FromObject(new {Input="test"});
 
