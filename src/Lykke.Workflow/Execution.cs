@@ -20,7 +20,7 @@ namespace Lykke.Workflow
         }
     }
 
-    public class Execution<TContext>
+    public class Execution
     {
         public WorkflowState State { get; set; }
         public string Error { get; set; }

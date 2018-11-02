@@ -8,9 +8,9 @@ namespace Lykke.Workflow.Executors
         private readonly ActivityExecution m_ResumingActivityExecution;
 
         public ResumeWorkflowExecutor(
-            Execution<TContext> execution,
+            Execution execution,
             TContext context,
-            INodesResolver<TContext> nodes,
+            Workflow<TContext> workflow,
             IActivityFactory factory,
             IExecutionObserver observer,
             ActivityExecution resumingActivityExecution,
@@ -18,7 +18,7 @@ namespace Lykke.Workflow.Executors
             : base(
                 execution,
                 context,
-                nodes,
+                workflow,
                 factory,
                 observer)
         {
@@ -49,7 +49,7 @@ namespace Lykke.Workflow.Executors
             return new WorkflowExecutor<TContext>(
                 Execution,
                 Context,
-                Nodes,
+                Workflow,
                 Factory,
                 ExecutionObserver);
         }

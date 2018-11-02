@@ -8,16 +8,16 @@ namespace Lykke.Workflow.Executors
         private readonly IActivityInputProvider m_InputProvider;
 
         public ResumeFromWorkflowExecutor(
-            Execution<TContext> execution,
+            Execution execution,
             TContext context,
-            INodesResolver<TContext> nodes,
+            Workflow<TContext> workflow,
             IActivityFactory factory,
             IExecutionObserver observer,
             object input) 
             : base(
                 execution,
                 context,
-                nodes,
+                workflow,
                 factory,
                 observer)
         {
@@ -25,16 +25,16 @@ namespace Lykke.Workflow.Executors
         }
 
         public ResumeFromWorkflowExecutor(
-            Execution<TContext> execution,
+            Execution execution,
             TContext context,
-            INodesResolver<TContext> nodes,
+            Workflow<TContext> workflow,
             IActivityFactory factory,
             IExecutionObserver observer,
             IActivityInputProvider inputProvider)
             : base(
                 execution,
                 context,
-                nodes,
+                workflow,
                 factory,
                 observer)
         {
@@ -63,7 +63,7 @@ namespace Lykke.Workflow.Executors
             return new WorkflowExecutor<TContext>(
                 Execution,
                 Context,
-                Nodes,
+                Workflow,
                 Factory,
                 ExecutionObserver);
         }
