@@ -8,7 +8,7 @@ using Lykke.Workflow.Fluent;
 
 namespace Lykke.Workflow
 {
-    public class Workflow<TContext> : IActivityFactory , INodesResolver<TContext> ,IDisposable 
+    public class Workflow<TContext> : IActivityFactory , INodesResolver<TContext> , IDisposable
     {
         private readonly IGraphNode<TContext> m_End;
         private readonly IGraphNode<TContext> m_Fail;
@@ -73,7 +73,7 @@ namespace Lykke.Workflow
             if (constructor == null)
                 throw new MissingMethodException("No public constructor defined for this object");
 
-            var instance = constructor.Invoke(constructor.GetParameters().Select(p=>values[p.Name]).ToArray());
+            var instance = constructor.Invoke(constructor.GetParameters().Select(p => values[p.Name]).ToArray());
             return (TActivity)instance;
         }
 
@@ -109,9 +109,9 @@ namespace Lykke.Workflow
                 throw new ApplicationException(string.Join(Environment.NewLine, errors));
         }
 
-        public virtual Execution<TContext> Run(TContext context)
+        public virtual Execution Run(TContext context)
         {
-            var execution = new Execution<TContext> { State = WorkflowState.InProgress };
+            var execution = new Execution { State = WorkflowState.InProgress };
             var executor = new WorkflowExecutor<TContext>(
                 execution,
                 context,
@@ -131,7 +131,7 @@ namespace Lykke.Workflow
             return execution;
         }
 
-        public virtual Execution<TContext> Resume<TClosure>(
+        public virtual Execution Resume<TClosure>(
             TContext context,
             Guid activityExecutionId,
             TClosure closure)
@@ -152,7 +152,8 @@ namespace Lykke.Workflow
                     this,
                     m_ActivityFactory,
                     m_ExecutionObserver,
-                    activityExecution, closure);
+                    activityExecution,
+                    closure);
                 try
                 {
                     string node = activityExecution.Node;
@@ -168,7 +169,7 @@ namespace Lykke.Workflow
             return execution;
         }
 
-        public virtual Execution<TContext> ResumeAfter(
+        public virtual Execution ResumeAfter(
             TContext context,
             string node,
             IActivityOutputProvider outputProvider)
@@ -195,7 +196,7 @@ namespace Lykke.Workflow
             return execution;
         }
 
-        public virtual Execution<TContext> ResumeFrom(
+        public virtual Execution ResumeFrom(
             TContext context,
             string node,
             IActivityInputProvider inputProvider)
@@ -221,7 +222,7 @@ namespace Lykke.Workflow
             return execution;
         }
 
-        public virtual Execution<TContext> ResumeFrom(
+        public virtual Execution ResumeFrom(
             TContext context,
             string node,
             object input = null)

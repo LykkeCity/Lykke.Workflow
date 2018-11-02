@@ -5,15 +5,15 @@ namespace Lykke.Workflow.Executors
     internal class WorkflowExecutor<TContext> : WorkflowExecutorBase<TContext>
     {
         public WorkflowExecutor(
-            Execution<TContext> execution,
+            Execution execution,
             TContext context,
-            INodesResolver<TContext> nodes,
+            Workflow<TContext> workflow,
             IActivityFactory factory,
             IExecutionObserver observer)
             : base(
                 execution,
                 context,
-                nodes,
+                workflow,
                 factory,
                 observer)
         {
@@ -24,35 +24,17 @@ namespace Lykke.Workflow.Executors
             Guid activityExecutionId,
             out object activityOutput)
         {
-            var telemtryOperation = TelemetryHelper.InitTelemetryOperation(
-                "Workflow node execution",
-                node.Name,
-                node.ActivityType,
-                activityExecutionId.ToString());
-
-            try
-            {
-                return node.ActivitySlot.Execute(
+            return node.ActivitySlot.Execute(
+                activityExecutionId,
+                Factory,
+                Context,
+                null,
+                out activityOutput,
+                activityInput => ExecutionObserver.ActivityStarted(
                     activityExecutionId,
-                    Factory,
-                    Context,
-                    null,
-                    out activityOutput,
-                    activityInput => ExecutionObserver.ActivityStarted(
-                        activityExecutionId,
-                        node.Name,
-                        node.ActivityType,
-                        activityInput));
-            }
-            catch (Exception e)
-            {
-                TelemetryHelper.SubmitException(telemtryOperation, e);
-                throw;
-            }
-            finally
-            {
-                TelemetryHelper.SubmitOperationResult(telemtryOperation);
-            }
+                    node.Name,
+                    node.ActivityType,
+                    activityInput));
         }
     }
 }

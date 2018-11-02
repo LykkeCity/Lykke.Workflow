@@ -5,12 +5,13 @@ namespace Lykke.Workflow.Executors
 {
     internal abstract class WorkflowExecutorBase<TContext> : IWorkflowVisitor<TContext, WorkflowState>
     {
-        private readonly INodesResolver<TContext> m_Nodes;
-        private readonly Execution<TContext> m_Execution;
+        private readonly Workflow<TContext> _workflow;
+        private readonly Execution m_Execution;
         private readonly TContext m_Context;
         private readonly IExecutionObserver m_ExecutionObserver;
+        private readonly string _workflowTypeName;
 
-        protected INodesResolver<TContext> Nodes => m_Nodes;
+        protected Workflow<TContext> Workflow => _workflow;
 
         protected IExecutionObserver ExecutionObserver => m_ExecutionObserver;
 
@@ -18,12 +19,12 @@ namespace Lykke.Workflow.Executors
 
         protected TContext Context => m_Context;
 
-        protected Execution<TContext> Execution => m_Execution;
+        protected Execution Execution => m_Execution;
 
         protected WorkflowExecutorBase(
-            Execution<TContext> execution,
+            Execution execution,
             TContext context,
-            INodesResolver<TContext> nodes,
+            Workflow<TContext> workflow,
             IActivityFactory factory,
             IExecutionObserver observer)
         {
@@ -31,7 +32,8 @@ namespace Lykke.Workflow.Executors
             m_Context = context;
             Factory = factory;
             m_Execution = execution;
-            m_Nodes = nodes;
+            _workflow = workflow;
+            _workflowTypeName = _workflow.GetType().Name;
         }
 
         protected abstract ActivityResult VisitNode(
@@ -51,7 +53,30 @@ namespace Lykke.Workflow.Executors
         {
             var activityExecution = GetActivityExecution(node);
 
-            var result = VisitNode(node, activityExecution.Id, out var activityOutput);
+            var telemtryOperation = TelemetryHelper.InitTelemetryOperation(
+                _workflowTypeName,
+                node.Name,
+                node.ActivityType,
+                activityExecution.Id.ToString());
+
+            ActivityResult result;
+            object activityOutput;
+            try
+            {
+                result = VisitNode(
+                    node,
+                    activityExecution.Id,
+                    out activityOutput);
+            }
+            catch (Exception e)
+            {
+                TelemetryHelper.SubmitException(telemtryOperation, e);
+                throw;
+            }
+            finally
+            {
+                TelemetryHelper.SubmitOperationResult(telemtryOperation);
+            }
 
             switch (result)
             {
@@ -105,7 +130,7 @@ namespace Lykke.Workflow.Executors
             var transition = edges.FirstOrDefault();
             if (transition != null)
             {
-                var nextNode = m_Nodes[transition.Node];
+                var nextNode = ((INodesResolver<TContext>)_workflow)[transition.Node];
                 var nextResult = nextNode.Accept(GetNextNodeVisitor());
                 return nextResult;
             }

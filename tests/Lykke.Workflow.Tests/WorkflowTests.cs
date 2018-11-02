@@ -505,14 +505,14 @@ namespace Lykke.Workflow.Tests
 
     public class InMemoryPersister<TContext> : IWorkflowPersister<TContext>
     {
-        readonly Dictionary<TContext, Execution<TContext>> m_Cahce = new Dictionary<TContext, Execution<TContext>>();
-        public void Save(TContext context, Execution<TContext> execution)
+        readonly Dictionary<TContext, Execution> m_Cahce = new Dictionary<TContext, Execution>();
+        public void Save(TContext context, Execution execution)
         {
             if (!m_Cahce.ContainsValue(execution))
                 m_Cahce.Add(context, execution);
         }
 
-        public Execution<TContext> Load(TContext context)
+        public Execution Load(TContext context)
         {
             return m_Cahce[context];
         }

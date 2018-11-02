@@ -8,16 +8,16 @@ namespace Lykke.Workflow.Executors
         private readonly object m_Output;
 
         public ResumeAfterWorkflowExecutor(
-            Execution<TContext> execution,
+            Execution execution,
             TContext context,
-            INodesResolver<TContext> nodes,
+            Workflow<TContext> workflow,
             IActivityFactory factory,
             IExecutionObserver observer,
             object output)
             : base(
                 execution,
                 context,
-                nodes,
+                workflow,
                 factory,
                 observer)
         {
@@ -25,13 +25,18 @@ namespace Lykke.Workflow.Executors
         }
 
         public ResumeAfterWorkflowExecutor(
-            Execution<TContext> execution,
+            Execution execution,
             TContext context,
-            INodesResolver<TContext> nodes,
+            Workflow<TContext> workflow,
             IActivityFactory factory,
             IExecutionObserver observer,
             IActivityOutputProvider outputProvider) 
-            : base(execution, context, nodes, factory, observer)
+            : base(
+                execution,
+                context,
+                workflow,
+                factory,
+                observer)
         {
             m_OutputProvider = outputProvider;
         }
@@ -64,7 +69,7 @@ namespace Lykke.Workflow.Executors
             return new WorkflowExecutor<TContext>(
                 Execution,
                 Context,
-                Nodes,
+                Workflow,
                 Factory,
                 ExecutionObserver);
         }
