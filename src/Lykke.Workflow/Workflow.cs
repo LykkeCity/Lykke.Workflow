@@ -316,28 +316,15 @@ graph [ resolution=64];
         public ISlotCreationHelper<TContext, DelegateActivity<TInput, TOutput>> DelegateNode<TInput, TOutput>(string name, Expression<Func<TInput, TOutput>> method)
             where TInput : class where TOutput : class
         {
-            var methodCall = method.Body as MethodCallExpression;
-            string activityType = "DelegateActivity";
-
-            if (methodCall != null)
-            {
-                activityType += " " + methodCall.Method.Name;
-            }
+            string activityType = GetActivityType(method);
             var activityMethod = method.Compile();
-
             return GetNode(name).Activity<DelegateActivity<TInput, TOutput>>(activityType, new { activityMethod, isInputSerializable = true });
         }
 
         public IActivitySlot<TContext, object, TOutput, Exception> DelegateNode<TOutput>(string name, Expression<Func<TContext, TOutput>> method)
             where TOutput : class
         {
-            var methodCall = method.Body as MethodCallExpression;
-            string activityType = "DelegateActivity";
-
-            if (methodCall != null)
-            {
-                activityType += " " + methodCall.Method.Name;
-            }
+            string activityType = GetActivityType(method);
             Func<TContext, TOutput> compiled = method.Compile();
             Func<object, TOutput> activityMethod = context => compiled((TContext)context);
             return GetNode(name)
@@ -347,13 +334,7 @@ graph [ resolution=64];
 
         public IActivitySlot<TContext, object, object, Exception> DelegateNode(string name, Expression<Action<TContext>> method) 
         {
-            var methodCall = method.Body as MethodCallExpression;
-            string activityType = "DelegateActivity";
-
-            if (methodCall != null)
-            {
-                activityType += " " + methodCall.Method.Name;
-            }
+            string activityType = GetActivityType(method);
             Action<TContext> compiled = method.Compile();
             Func<object,object> activityMethod = context =>
             {
@@ -368,21 +349,22 @@ graph [ resolution=64];
         public ISlotCreationHelper<TContext, DelegateActivity<TInput, object>> DelegateNode<TInput>(string name, Expression<Action<TInput>> method) 
             where TInput : class
         {
-            var methodCall = method.Body as MethodCallExpression;
-            string activityType = "DelegateActivity";
-
-            if (methodCall != null)
-            {
-                activityType += " " + methodCall.Method.Name;
-            }
+            string activityType = GetActivityType(method);
             Action<TInput> compiled = method.Compile();
             Func<object,object> activityMethod = input =>
             {
                 compiled((TInput) input);
                 return null;
             };
-
             return GetNode(name).Activity<DelegateActivity<TInput, object>>(activityType, new { activityMethod, isInputSerializable = true });
+        }
+
+        private static string GetActivityType(LambdaExpression method)
+        {
+            var methodCall = method.Body as MethodCallExpression;
+            return methodCall == null
+                ? "DelegateActivity"
+                : $"DelegateActivity {methodCall.Method.Name}";
         }
     }
 }

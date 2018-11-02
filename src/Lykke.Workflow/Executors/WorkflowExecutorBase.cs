@@ -51,47 +51,41 @@ namespace Lykke.Workflow.Executors
         {
             var activityExecution = GetActivityExecution(node);
 
-            var result = VisitNode(node,activityExecution.Id, out var activityOutput);
- 
-            if (result == ActivityResult.Pending)
-            {
-                m_Execution.State = WorkflowState.InProgress;
-                return WorkflowState.InProgress;
-            }
+            var result = VisitNode(node, activityExecution.Id, out var activityOutput);
 
-            if (result == ActivityResult.None)
+            switch (result)
             {
-                m_Execution.State = WorkflowState.Corrupted;
-                m_ExecutionObserver.ActivityCorrupted(
-                    activityExecution.Id,
-                    node.Name,
-                    node.ActivityType);
-                return WorkflowState.Corrupted;
-            }
-
-            if (result == ActivityResult.Failed)
-            {
-                m_ExecutionObserver.ActivityFailed(
-                    activityExecution.Id,
-                    node.Name,
-                    node.ActivityType,
-                    activityOutput);
-                m_Execution.ExecutingActivities.Remove(activityExecution);
-            }
-
-            if (result == ActivityResult.Succeeded)
-            {
-                m_ExecutionObserver.ActivityFinished(
-                    activityExecution.Id,
-                    node.Name,
-                    node.ActivityType,
-                    activityOutput);
-                m_Execution.ExecutingActivities.Remove(activityExecution);
+                case ActivityResult.None:
+                    m_Execution.State = WorkflowState.Corrupted;
+                    m_ExecutionObserver.ActivityCorrupted(
+                        activityExecution.Id,
+                        node.Name,
+                        node.ActivityType);
+                    return WorkflowState.Corrupted;
+                case ActivityResult.Failed:
+                    m_ExecutionObserver.ActivityFailed(
+                        activityExecution.Id,
+                        node.Name,
+                        node.ActivityType,
+                        activityOutput);
+                    m_Execution.ExecutingActivities.Remove(activityExecution);
+                    break;
+                case ActivityResult.Succeeded:
+                    m_ExecutionObserver.ActivityFinished(
+                        activityExecution.Id,
+                        node.Name,
+                        node.ActivityType,
+                        activityOutput);
+                    m_Execution.ExecutingActivities.Remove(activityExecution);
+                    break;
+                case ActivityResult.Pending:
+                    m_Execution.State = WorkflowState.InProgress;
+                    return WorkflowState.InProgress;
             }
 
             var edges = node.Edges.Where(e => e.Condition(m_Context, result)).ToArray();
 
-            if(edges.Length>1)
+            if(edges.Length > 1)
             {
                 m_Execution.Error = "Failed to get next node - more then one transition condition was met: "
                     + Environment.NewLine
@@ -109,7 +103,6 @@ namespace Lykke.Workflow.Executors
             }
 
             var transition = edges.FirstOrDefault();
-
             if (transition != null)
             {
                 var nextNode = m_Nodes[transition.Node];
